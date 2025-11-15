@@ -1,5 +1,5 @@
 [build]
-builder = "python"
+nixpacks = true
 
 [deploy]
 start = "python3 forwarder.py"
