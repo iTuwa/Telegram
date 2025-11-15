@@ -6,6 +6,7 @@ import logging
 from telethon import TelegramClient, events
 from telethon.tl import types
 from dotenv import load_dotenv
+from telethon.errors import SessionPasswordNeededError
 
 
 def parse_bool(s: str) -> bool:
@@ -49,10 +50,23 @@ async def main():
 
     api_id_int = int(api_id)
     client = TelegramClient("forwarder", api_id_int, api_hash)
-    if phone:
-        await client.start(phone=phone)
-    else:
-        await client.start()
+    await client.connect()
+
+    if not await client.is_user_authorized():
+        if not phone:
+            logging.error("No TG_PHONE provided and not authorized. Cannot sign in.")
+            sys.exit(1)
+        # Send code and sign in
+        await client.send_code_request(phone)
+        code = input("Enter the login code you received: ")
+        try:
+            await client.sign_in(phone=phone, code=code)
+        except SessionPasswordNeededError:
+            pwd = os.getenv("TG_PASSWORD")
+            if not pwd:
+                logging.error("Two-step verification enabled but TG_PASSWORD not set in .env.")
+                sys.exit(1)
+            await client.sign_in(password=pwd)
 
     source_spec = parse_entity_spec(source_chat)
     target_spec = parse_entity_spec(target_chat)
