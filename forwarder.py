@@ -49,24 +49,41 @@ async def main():
         logging.warning("FORWARD_MODE=%s is not supported, using forward", forward_mode)
 
     api_id_int = int(api_id)
-    client = TelegramClient("forwarder", api_id_int, api_hash)
-    await client.connect()
 
-    if not await client.is_user_authorized():
-        if not phone:
-            logging.error("No TG_PHONE provided and not authorized. Cannot sign in.")
-            sys.exit(1)
-        # Send code and sign in
-        await client.send_code_request(phone)
-        code = input("Enter the login code you received: ")
-        try:
-            await client.sign_in(phone=phone, code=code)
-        except SessionPasswordNeededError:
-            pwd = os.getenv("TG_PASSWORD")
-            if not pwd:
-                logging.error("Two-step verification enabled but TG_PASSWORD not set in .env.")
+    # Support three auth methods (in order of preference): BOT_TOKEN, STRING_SESSION, user interactive
+    bot_token = os.getenv("BOT_TOKEN")
+    string_session = os.getenv("STRING_SESSION")
+
+    if bot_token:
+        # Run as bot
+        client = TelegramClient("bot", api_id_int, api_hash)
+        await client.start(bot_token=bot_token)
+    elif string_session:
+        # Use a pre-generated StringSession stored in env
+        from telethon.sessions import StringSession
+
+        client = TelegramClient(StringSession(string_session), api_id_int, api_hash)
+        await client.start()
+    else:
+        # Default: user-login flow (interactive). This is not recommended for Railway/hosted deployments.
+        client = TelegramClient("forwarder", api_id_int, api_hash)
+        await client.connect()
+
+        if not await client.is_user_authorized():
+            if not phone:
+                logging.error("No TG_PHONE provided and not authorized. Cannot sign in.")
                 sys.exit(1)
-            await client.sign_in(password=pwd)
+            # Send code and sign in
+            await client.send_code_request(phone)
+            code = input("Enter the login code you received: ")
+            try:
+                await client.sign_in(phone=phone, code=code)
+            except SessionPasswordNeededError:
+                pwd = os.getenv("TG_PASSWORD")
+                if not pwd:
+                    logging.error("Two-step verification enabled but TG_PASSWORD not set in .env.")
+                    sys.exit(1)
+                await client.sign_in(password=pwd)
 
     source_spec = parse_entity_spec(source_chat)
     target_spec = parse_entity_spec(target_chat)

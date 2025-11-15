@@ -31,11 +31,15 @@ source .venv/bin/activate
 python forwarder.py
 ```
 
+
 Deploying to Railway
 
 1. Push your repo to GitHub (this repo).
 2. Create a new project on Railway and connect your GitHub repository.
-3. In Railway project settings, set environment variables (the same keys as `.env`): `TG_API_ID`, `TG_API_HASH`, `TG_PHONE`, `SOURCE_CHAT`, `TARGET_CHAT`, `FORWARD_MODE`, etc.
+3. In Railway project settings, set environment variables. Preferred options:
+	- `BOT_TOKEN` (recommended) — run as a bot (no phone/2FA). Add the bot to the source channel with read permissions.
+	- OR `STRING_SESSION` + `TG_API_ID` + `TG_API_HASH` — if you must use a user account. Generate a `StringSession` locally and store it in `STRING_SESSION`.
+	Also set: `SOURCE_CHAT`, `TARGET_CHAT`, `FORWARD_MODE`, `LOG_LEVEL`, etc.
 4. Railway will detect the `Procfile` and run the `worker: python forwarder.py` process. If not, set the start command to `python forwarder.py` and type `Worker`.
 
 Notes
