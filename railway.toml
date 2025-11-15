@@ -1,1 +1,5 @@
+[build]
+builder = "heroku/buildpacks:20"
 
+[deploy]
+start = "python3 forwarder.py"
