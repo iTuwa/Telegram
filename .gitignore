@@ -1,0 +1,27 @@
+.env
+# Virtual environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Telethon session
+forwarder.session
+
+# dotenv local files
+.env.local
+.env.*
+
+# Editor / OS
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Ensure venv is ignored (redundant but explicit)
+.venv/
+
+# Local Telethon session file
+forwarder.session
