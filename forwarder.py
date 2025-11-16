@@ -34,6 +34,7 @@ async def main():
     skip_service = parse_bool(os.getenv("SKIP_SERVICE_MESSAGES", "true"))
     log_level = (os.getenv("LOG_LEVEL", "INFO")).upper()
     phone = os.getenv("TG_PHONE")
+    password = os.getenv("TG_PASSWORD")
 
     try:
         logging.basicConfig(level=getattr(logging, log_level, logging.INFO), format="%(asctime)s %(levelname)s %(message)s")
@@ -49,8 +50,8 @@ async def main():
 
     api_id_int = int(api_id)
     client = TelegramClient("forwarder", api_id_int, api_hash)
-    if phone:
-        await client.start(phone=phone)
+    if phone or password:
+        await client.start(phone=phone, password=password)
     else:
         await client.start()
 
